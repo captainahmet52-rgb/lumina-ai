@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   Lumina AI — Creator Studio
+   Light theme, violet accent (spec §3 color palette)
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --primary: #7c3aed; /* violet-600 — ana buton + accent */
+  --primary-hover: #6d28d9;
+  --bg: #f8f9fc; /* açık gri-mor zemin */
+  --card: #ffffff;
+  --text: #1a1a2e;
+  --muted: #8b8ba7;
+  --border: #ececf2;
+
+  --radius: 1rem; /* rounded-2xl baseline */
+}
+
+@theme inline {
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: #ffffff;
+
+  --color-background: var(--bg);
+  --color-card: var(--card);
+  --color-foreground: var(--text);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+
+  --color-input: var(--border);
+  --color-ring: var(--primary);
+
+  --font-sans:
+    var(--font-app), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+/* Soft card shadow used across the app (spec §3) */
+.shadow-card {
+  box-shadow:
+    0 1px 2px rgba(26, 26, 46, 0.04),
+    0 8px 24px rgba(124, 58, 237, 0.06);
+}
+
+.shadow-card-lg {
+  box-shadow:
+    0 2px 4px rgba(26, 26, 46, 0.05),
+    0 16px 40px rgba(124, 58, 237, 0.1);
+}
+
+/* Subtle violet gradient backdrop for hero / auth screens */
+.bg-aurora {
+  background:
+    radial-gradient(60% 60% at 20% 0%, rgba(124, 58, 237, 0.08) 0%, transparent 60%),
+    radial-gradient(50% 50% at 100% 100%, rgba(124, 58, 237, 0.06) 0%, transparent 60%),
+    var(--bg);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(124, 58, 237, 0.06) 25%,
+    rgba(124, 58, 237, 0.12) 37%,
+    rgba(124, 58, 237, 0.06) 63%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 1.6s infinite linear;
+}
+
+/* Thin scrollbar for sidebars / galleries */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
