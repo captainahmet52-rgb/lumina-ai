@@ -1,99 +1,135 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { generateScripts } from "@/lib/ai/claude";
-import { startVideoGeneration, pollUntilComplete } from "@/lib/ai/kling";
-import type { Generation } from "@/lib/types";
+import { generateTurkishSpeech } from "@/lib/ai/claude";
+import { turkishSpeech } from "@/lib/ai/elevenlabs";
+import {
+  uploadAudio,
+  submitAvatarJob,
+  checkAvatarJob,
+  type AvatarQuality,
+} from "@/lib/ai/fal-avatar";
+import type { Generation, GenerationMetadata } from "@/lib/types";
 
-export type PipelineInput = {
+export type StartInput = {
   generationId: string;
-  userId: string;
   characterImageUrl: string;
   productImageUrl: string;
   productName: string;
   videoPrompt: string;
+  seconds: number;
+  quality: AvatarQuality;
 };
 
-async function updateGeneration(generationId: string, update: Partial<Generation>) {
+async function update(generationId: string, patch: Partial<Generation>) {
   const admin = createAdminClient();
-  await admin.from("generations").update(update).eq("id", generationId);
-}
-
-async function imageUrlToBase64(url: string): Promise<string> {
-  const res = await fetch(url);
-  const buffer = await res.arrayBuffer();
-  return Buffer.from(buffer).toString("base64");
+  await admin.from("generations").update(patch).eq("id", generationId);
 }
 
 /**
- * Tam pipeline:
- * 1. İki görseli base64'e çevir
- * 2. Gemini ile script üret (karakter + ürün görseli + kullanıcı promptu)
- * 3. Her script için Prototipal'da video üret (karakter görseli referans)
- * 4. Supabase'i güncelle → Realtime frontend'e bildirir
+ * FAZ 1 (serverless-safe, /api/generate içinde await edilir, ~10-15sn):
+ * Claude → TR metin, ElevenLabs → ses, fal'a video işini KUYRUĞA gönderir.
+ * request_id'yi metadata'ya yazar; uzun video üretimini beklemez.
  */
-export async function runGenerationPipeline(input: PipelineInput) {
-  const { generationId, characterImageUrl, productImageUrl, productName, videoPrompt } = input;
+export async function startGeneration(input: StartInput): Promise<void> {
+  const {
+    generationId,
+    characterImageUrl,
+    productImageUrl,
+    productName,
+    videoPrompt,
+    seconds,
+    quality,
+  } = input;
+
+  const baseMeta: GenerationMetadata = {
+    product_name: productName,
+    character_image_url: characterImageUrl,
+    fal_quality: quality,
+  };
 
   try {
-    // ── Adım 1: Görselleri indir ───────────────────────────────────
-    await updateGeneration(generationId, {
+    await update(generationId, {
       status: "processing",
-      metadata: { step: "Görseller hazırlanıyor…", product_name: productName, character_image_url: characterImageUrl },
+      metadata: { ...baseMeta, step: "Konuşma metni yazılıyor…" },
     });
-
-    const [characterBase64, productBase64] = await Promise.all([
-      imageUrlToBase64(characterImageUrl),
-      imageUrlToBase64(productImageUrl),
-    ]);
-
-    // ── Adım 2: Gemini ile script üret ────────────────────────────
-    await updateGeneration(generationId, {
-      metadata: {
-        step: "UGC video scriptleri yazılıyor…",
-        product_name: productName,
-        character_image_url: characterImageUrl,
-      },
-    });
-
-    const rawScript = await generateScripts(
+    const speech = await generateTurkishSpeech({
+      characterImageUrl,
+      productImageUrl,
       productName,
       videoPrompt,
-      characterBase64,
-      productBase64,
-    );
-
-    // ── Adım 3: Tek video üret ─────────────────────────────────────
-    await updateGeneration(generationId, {
-      metadata: {
-        step: "Video üretiliyor… (2-3 dk sürebilir)",
-        product_name: productName,
-        character_image_url: characterImageUrl,
-      },
+      seconds,
     });
 
-    const videoJobId = await startVideoGeneration(rawScript, characterImageUrl);
-    const videoUrl = await pollUntilComplete(videoJobId);
+    await update(generationId, {
+      metadata: { ...baseMeta, step: "Türkçe ses üretiliyor…", spoken_text: speech },
+    });
+    const audio = await turkishSpeech(speech);
+    const audioUrl = await uploadAudio(audio);
 
-    if (!videoUrl) {
-      throw new Error("Video üretilemedi.");
-    }
+    const requestId = await submitAvatarJob(characterImageUrl, audioUrl, quality);
 
-    // ── Adım 4: Tamamlandı ─────────────────────────────────────────
-    await updateGeneration(generationId, {
-      status: "completed",
-      video_url: videoUrl,
-      completed_at: new Date().toISOString(),
+    await update(generationId, {
       metadata: {
-        step: "Tamamlandı",
-        product_name: productName,
-        character_image_url: characterImageUrl,
+        ...baseMeta,
+        step: "Video üretiliyor… (2-4 dk sürebilir)",
+        spoken_text: speech,
+        fal_request_id: requestId,
       },
     });
   } catch (err) {
-    const errorMsg = err instanceof Error ? err.message : "Pipeline hatası";
-    await updateGeneration(generationId, {
+    await update(generationId, {
       status: "failed",
-      error: errorMsg,
+      error: err instanceof Error ? err.message : "Üretim hatası",
       completed_at: new Date().toISOString(),
     });
   }
+}
+
+/**
+ * FAZ 2 (sonuç ekranı yoklarken çağrılır):
+ * fal kuyruğunu kontrol eder; video bittiyse kaydı `completed` yapar.
+ * Döndürdüğü: güncel Generation satırı.
+ */
+export async function finalizeGeneration(
+  generation: Generation,
+): Promise<Generation> {
+  if (generation.status === "completed" || generation.status === "failed") {
+    return generation;
+  }
+
+  const meta = (generation.metadata ?? {}) as GenerationMetadata;
+  const requestId = meta.fal_request_id as string | undefined;
+  const quality = (meta.fal_quality as AvatarQuality) ?? "standard";
+
+  if (!requestId) return generation; // henüz kuyruğa girmedi
+
+  try {
+    const job = await checkAvatarJob(requestId, quality);
+
+    if (job.status === "COMPLETED" && job.videoUrl) {
+      const admin = createAdminClient();
+      const patch: Partial<Generation> = {
+        status: "completed",
+        video_url: job.videoUrl,
+        completed_at: new Date().toISOString(),
+        metadata: { ...meta, step: "Tamamlandı" },
+      };
+      await admin.from("generations").update(patch).eq("id", generation.id);
+      return { ...generation, ...patch } as Generation;
+    }
+
+    if (job.status === "ERROR") {
+      const admin = createAdminClient();
+      const patch: Partial<Generation> = {
+        status: "failed",
+        error: "Video üretimi başarısız oldu.",
+        completed_at: new Date().toISOString(),
+      };
+      await admin.from("generations").update(patch).eq("id", generation.id);
+      return { ...generation, ...patch } as Generation;
+    }
+  } catch {
+    // Geçici hata — bir sonraki yoklamada tekrar denenir.
+  }
+
+  return generation;
 }

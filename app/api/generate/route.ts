@@ -1,16 +1,21 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { runGenerationPipeline } from "@/lib/pipeline";
+import { startGeneration } from "@/lib/pipeline";
 
 type GenerateBody = {
   character_image_url?: string;
   product_image_url?: string;
   product_name?: string;
   video_prompt?: string;
+  seconds?: number;
+  quality?: "standard" | "pro";
 };
 
 export const runtime = "nodejs";
+export const maxDuration = 60; // faz 1: metin+ses+kuyruğa gönderme (~15sn)
+
+const ALLOWED_SECONDS = [15, 30, 45];
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -46,6 +51,11 @@ export async function POST(request: NextRequest) {
   if (!videoPrompt || videoPrompt.length < 5) {
     return NextResponse.json({ error: "Video açıklaması yazılmalı." }, { status: 400 });
   }
+
+  const seconds = ALLOWED_SECONDS.includes(body.seconds ?? 0)
+    ? (body.seconds as number)
+    : 15;
+  const quality = body.quality === "pro" ? "pro" : "standard";
 
   // Kredi / plan kontrolü
   const { data: profile } = await supabase
@@ -93,14 +103,15 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id);
   }
 
-  // Pipeline arka planda başlat
-  void runGenerationPipeline({
+  // Faz 1: metin + ses + fal kuyruğa gönder (await — ~10-15sn, serverless-safe)
+  await startGeneration({
     generationId,
-    userId: user.id,
     characterImageUrl,
     productImageUrl,
     productName,
     videoPrompt,
+    seconds,
+    quality,
   });
 
   return NextResponse.json({ generation_id: generationId }, { status: 201 });

@@ -1,50 +1,59 @@
 const MODEL = "claude-haiku-4-5-20251001";
 
-function buildScriptPrompt(productName: string, videoPrompt: string): string {
-  return `You are an expert UGC video script writer. Create exactly 3 raw 12-second UGC video scripts.
-
-**USER DIRECTION (MOST IMPORTANT - follow this exactly):**
-${videoPrompt}
-
-**PRODUCT:** ${productName}
-
-**YOU HAVE TWO IMAGES:**
-- Image 1: The CHARACTER (the real person who will appear in the video)
-- Image 2: The PRODUCT being promoted
-
-**RULES:**
-- Scripts must match the user's direction above (funny, serious, energetic, etc.)
-- The character in Image 1 is the UGC creator — write scripts that fit their appearance and vibe
-- Raw iPhone aesthetic: shaky, handheld, no text overlays, no professional production
-- Each script is exactly 12 seconds
-- Natural speech with filler words ("like", "literally", "honestly", "I mean")
-- NO invented details about the product beyond what's visible in the image
-
-**OUTPUT FORMAT:**
-SCRIPT 1: [angle title]
-Energy: [one line describing the vibe]
-[0:00-0:02] "[opening - 4-6 words, mid-thought energy]"
-[0:02-0:09] "[main content - 20-25 words, natural speech, conversational]"
-[0:09-0:12] "[close - 3-5 words]"
-Shot breakdown: [brief second-by-second camera/action notes]`;
+async function imageToBase64(
+  url: string,
+): Promise<{ data: string; mime: string }> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Görsel indirilemedi (${res.status})`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  return {
+    data: buf.toString("base64"),
+    mime: res.headers.get("content-type") || "image/jpeg",
+  };
 }
 
-type AnthropicResponse = {
-  content: { type: string; text: string }[];
-};
+/** İstenen video süresine göre yaklaşık kelime sayısı (~2.2 kelime/sn). */
+function wordTarget(seconds: number): string {
+  const words = Math.round(seconds * 2.2);
+  return `about ${words} words (roughly ${seconds} seconds of natural speech)`;
+}
+
+export interface SpeechInput {
+  characterImageUrl: string;
+  productImageUrl: string;
+  productName: string;
+  videoPrompt: string;
+  seconds: number;
+}
 
 /**
- * Claude Haiku ile UGC video scriptleri üretir.
- * İki görsel (karakter + ürün) ve kullanıcı promptunu alır.
+ * Claude Haiku — karakter + ürün görselini görür, kullanıcının istediği tarza
+ * göre karakterin söyleyeceği TÜRKÇE konuşma metnini üretir.
+ * Sadece söylenen kelimeler döner (sahne yönergesi yok) — bu metin ElevenLabs'e
+ * ses olarak, oradan da Kling AI Avatar'a gider.
  */
-export async function generateScripts(
-  productName: string,
-  videoPrompt: string,
-  characterBase64: string,
-  productBase64: string,
-): Promise<string> {
+export async function generateTurkishSpeech(input: SpeechInput): Promise<string> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY eksik.");
+
+  const [character, product] = await Promise.all([
+    imageToBase64(input.characterImageUrl),
+    imageToBase64(input.productImageUrl),
+  ]);
+
+  const instruction = `You write UGC ad scripts. Image 1 = the CHARACTER who will speak in the video. Image 2 = the PRODUCT being advertised.
+
+USER DIRECTION (follow this exactly): ${input.videoPrompt}
+PRODUCT NAME: ${input.productName}
+
+Write ONLY the words the character SAYS out loud, in TURKISH. Requirements:
+- Natural, casual, authentic — like a real person filming a UGC ad on their phone
+- Match the user's direction (funny, sincere, energetic, etc.)
+- Length: ${wordTarget(input.seconds)}
+- Talk about the product naturally, mention what's visible in the product image
+- NO stage directions, NO quotation marks, NO English — only the spoken Turkish words
+
+Return only the spoken text, nothing else.`;
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -55,31 +64,14 @@ export async function generateScripts(
     },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: 4096,
+      max_tokens: 1024,
       messages: [
         {
           role: "user",
           content: [
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: "image/jpeg",
-                data: characterBase64,
-              },
-            },
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: "image/png",
-                data: productBase64,
-              },
-            },
-            {
-              type: "text",
-              text: buildScriptPrompt(productName, videoPrompt),
-            },
+            { type: "image", source: { type: "base64", media_type: character.mime, data: character.data } },
+            { type: "image", source: { type: "base64", media_type: product.mime, data: product.data } },
+            { type: "text", text: instruction },
           ],
         },
       ],
@@ -87,16 +79,12 @@ export async function generateScripts(
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Claude Haiku hatası: ${err}`);
+    throw new Error(`Claude hatası (${res.status}): ${await res.text()}`);
   }
 
-  const data = (await res.json()) as AnthropicResponse;
-  return data.content.find((c) => c.type === "text")?.text ?? "";
-}
-
-/** Ham script metnini 3 ayrı script'e böler. */
-export function splitScripts(rawText: string): string[] {
-  const parts = rawText.split(/SCRIPT\s+\d+:/i).filter((s) => s.trim());
-  return parts.map((p, i) => `SCRIPT ${i + 1}:${p.trim()}`).slice(0, 3);
+  const data = (await res.json()) as {
+    content: { type: string; text?: string }[];
+  };
+  const text = data.content.find((c) => c.type === "text")?.text ?? "";
+  return text.trim();
 }

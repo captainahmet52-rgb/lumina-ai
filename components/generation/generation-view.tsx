@@ -38,15 +38,20 @@ export function GenerationView({ initial }: { initial: Generation }) {
       )
       .subscribe();
 
-    // Safety-net poll (every 5s) until terminal state.
+    // Her 8sn'de fal kuyruğunu yoklat + güncel satırı al.
     const poll = setInterval(async () => {
-      const { data } = await supabase
-        .from("generations")
-        .select("*")
-        .eq("id", initial.id)
-        .maybeSingle();
-      if (data) setGeneration(data as Generation);
-    }, 5000);
+      try {
+        const res = await fetch(`/api/generation/${initial.id}/poll`, {
+          method: "POST",
+        });
+        if (res.ok) {
+          const { generation: g } = await res.json();
+          if (g) setGeneration(g as Generation);
+        }
+      } catch {
+        // sessizce geç, bir sonraki turda tekrar dener
+      }
+    }, 8000);
 
     return () => {
       supabase.removeChannel(channel);

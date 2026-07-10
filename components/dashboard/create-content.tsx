@@ -24,6 +24,7 @@ export function CreateContent({ userId, plan, credits }: CreateContentProps) {
   const [productImageUrl, setProductImageUrl] = useState<string | null>(null);
   const [productName, setProductName] = useState("");
   const [videoPrompt, setVideoPrompt] = useState("");
+  const [seconds, setSeconds] = useState(15);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +53,7 @@ export function CreateContent({ userId, plan, credits }: CreateContentProps) {
           product_image_url: productImageUrl,
           product_name: productName.trim(),
           video_prompt: videoPrompt.trim(),
+          seconds,
         }),
       });
 
@@ -179,6 +181,26 @@ export function CreateContent({ userId, plan, credits }: CreateContentProps) {
             <p className="text-xs text-[var(--muted)]">
               Ne kadar detaylı yazarsan video o kadar istendiği gibi çıkar.
             </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Video Süresi</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {[15, 30, 45].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSeconds(s)}
+                  className={
+                    seconds === s
+                      ? "rounded-xl border border-[var(--primary)] bg-[var(--primary)]/10 px-3 py-2.5 text-sm font-semibold text-[var(--primary)]"
+                      : "rounded-xl border border-[var(--border)] bg-white px-3 py-2.5 text-sm font-medium text-[var(--muted)] transition-colors hover:border-[var(--primary)]/40"
+                  }
+                >
+                  {s} sn
+                </button>
+              ))}
+            </div>
           </div>
 
           {error && (
