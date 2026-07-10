@@ -34,12 +34,12 @@ export function GenerationFailed({ generation }: { generation: Generation }) {
         return;
       }
       if (!res.ok) {
-        setError(data.error || "Could not start a new generation.");
+        setError(data.error || "Yeni üretim başlatılamadı.");
         return;
       }
       router.push(`/my-content/${data.generation_id}`);
     } catch {
-      setError("Network error. Please try again.");
+      setError("Bağlantı hatası. Lütfen tekrar dene.");
     } finally {
       setRetrying(false);
     }
@@ -48,7 +48,7 @@ export function GenerationFailed({ generation }: { generation: Generation }) {
   return (
     <div className="space-y-6">
       <Badge variant="danger" className="w-fit">
-        <AlertTriangle className="size-3.5" /> Generation Failed
+        <AlertTriangle className="size-3.5" /> Üretim Başarısız
       </Badge>
 
       <Card>
@@ -57,10 +57,10 @@ export function GenerationFailed({ generation }: { generation: Generation }) {
             <AlertTriangle className="size-7" />
           </div>
           <div className="space-y-1">
-            <h1 className="text-xl font-bold">Something went wrong</h1>
+            <h1 className="text-xl font-bold">Bir şeyler ters gitti</h1>
             <p className="max-w-md text-sm text-[var(--muted)]">
               {generation.error ||
-                "Lumina couldn't finish this generation. Your credit has been preserved — give it another try."}
+                "Lumina bu videoyu tamamlayamadı. Kredin korundu — tekrar deneyebilirsin."}
             </p>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
@@ -70,7 +70,7 @@ export function GenerationFailed({ generation }: { generation: Generation }) {
             ) : (
               <RefreshCw className="size-4" />
             )}
-            Try Again
+            Tekrar Dene
           </Button>
         </CardContent>
       </Card>

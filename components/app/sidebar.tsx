@@ -62,7 +62,7 @@ export function Sidebar({ profile }: SidebarProps) {
         <Button asChild size="lg" className="w-full">
           <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
             <Sparkles className="size-4" />
-            Create New AI Content
+            Yeni Video Oluştur
           </Link>
         </Button>
 
@@ -70,15 +70,15 @@ export function Sidebar({ profile }: SidebarProps) {
           <Avatar src={profile.avatar_url} name={profile.full_name} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-[var(--text)]">
-              {profile.full_name || "Creator"}
+              {profile.full_name || "Kullanıcı"}
             </p>
             <div className="flex items-center gap-1.5">
               <Badge variant={isPro ? "default" : "muted"} className="px-2 py-0.5">
-                {isPro ? "Pro" : "Free"}
+                {isPro ? "Pro" : "Ücretsiz"}
               </Badge>
               {!isPro && (
                 <span className="text-[11px] text-[var(--muted)]">
-                  {profile.credits} credits
+                  {profile.credits} kredi
                 </span>
               )}
             </div>
@@ -86,7 +86,7 @@ export function Sidebar({ profile }: SidebarProps) {
           <form action={signOut}>
             <button
               type="submit"
-              title="Sign out"
+              title="Çıkış yap"
               className="rounded-lg p-2 text-[var(--muted)] transition-colors hover:bg-white hover:text-red-500"
             >
               <LogOut className="size-4" />
@@ -105,7 +105,7 @@ export function Sidebar({ profile }: SidebarProps) {
         <button
           onClick={() => setMobileOpen(true)}
           className="rounded-lg p-2 text-[var(--text)] hover:bg-[var(--bg)]"
-          aria-label="Open menu"
+          aria-label="Menüyü aç"
         >
           <Menu className="size-5" />
         </button>
@@ -122,7 +122,7 @@ export function Sidebar({ profile }: SidebarProps) {
             <button
               onClick={() => setMobileOpen(false)}
               className="absolute right-4 top-5 rounded-lg p-1.5 text-[var(--muted)] hover:bg-[var(--bg)]"
-              aria-label="Close menu"
+              aria-label="Menüyü kapat"
             >
               <X className="size-5" />
             </button>

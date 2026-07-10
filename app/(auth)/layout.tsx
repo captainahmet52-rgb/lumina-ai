@@ -10,7 +10,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       </div>
       <div className="w-full max-w-md">{children}</div>
       <p className="mt-8 text-center text-xs text-[var(--muted)]">
-        © {new Date().getFullYear()} Lumina AI · Crafted for creators
+        © {new Date().getFullYear()} Lumina AI · İçerik üreticileri için tasarlandı
       </p>
     </div>
   );

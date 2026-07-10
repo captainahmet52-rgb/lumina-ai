@@ -8,7 +8,7 @@ import { Topbar } from "@/components/app/topbar";
 import { GenerationView } from "@/components/generation/generation-view";
 import type { Generation } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Generation" };
+export const metadata: Metadata = { title: "Video" };
 
 export default async function GenerationPage({
   params,
@@ -38,7 +38,7 @@ export default async function GenerationPage({
           href="/my-content"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--text)]"
         >
-          <ArrowLeft className="size-4" /> Back to My Content
+          <ArrowLeft className="size-4" /> İçeriklerime Dön
         </Link>
 
         <GenerationView initial={data as Generation} />

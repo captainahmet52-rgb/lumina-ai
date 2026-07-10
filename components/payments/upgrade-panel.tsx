@@ -36,14 +36,14 @@ export function UpgradePanel({ isPro, status }: UpgradePanelProps) {
       const res = await fetch("/api/checkout", { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Could not start checkout.");
+        setError(data.error || "Ödeme başlatılamadı.");
         setLoading(false);
         return;
       }
-      // Redirect to Stripe's hosted, PCI-compliant Checkout.
+      // Stripe'ın barındırdığı, PCI uyumlu ödeme sayfasına yönlendir.
       window.location.href = data.url;
     } catch {
-      setError("Network error. Please try again.");
+      setError("Bağlantı hatası. Lütfen tekrar dene.");
       setLoading(false);
     }
   }
@@ -56,14 +56,14 @@ export function UpgradePanel({ isPro, status }: UpgradePanelProps) {
             <CheckCircle2 className="size-7" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-xl font-bold">You're on Creator Pro</h2>
+            <h2 className="text-xl font-bold">Creator Pro üyesisin</h2>
             <p className="text-sm text-[var(--muted)]">
-              Unlimited generations, commercial rights and 4K exports are all
-              unlocked. Thank you for supporting Lumina AI.
+              Sınırsız üretim, ticari kullanım hakkı ve 4K indirme senin için
+              açık. Lumina AI'ı desteklediğin için teşekkürler.
             </p>
           </div>
           <Button asChild>
-            <Link href="/dashboard">Back to Studio</Link>
+            <Link href="/dashboard">Stüdyoya Dön</Link>
           </Button>
         </CardContent>
       </Card>
@@ -74,12 +74,12 @@ export function UpgradePanel({ isPro, status }: UpgradePanelProps) {
     <div className="space-y-5">
       {status === "success" && (
         <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-600">
-          Payment received! Your plan will switch to Pro within a few seconds.
+          Ödeme alındı! Planın birkaç saniye içinde Pro'ya geçecek.
         </div>
       )}
       {status === "cancelled" && (
         <div className="rounded-xl bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-600">
-          Checkout cancelled — no charge was made.
+          Ödeme iptal edildi — herhangi bir ücret alınmadı.
         </div>
       )}
 
@@ -89,16 +89,16 @@ export function UpgradePanel({ isPro, status }: UpgradePanelProps) {
           <CardContent className="space-y-5 p-6">
             <div className="flex items-center gap-2">
               <CreditCard className="size-5 text-[var(--primary)]" />
-              <h2 className="text-base font-semibold">Payment Method</h2>
+              <h2 className="text-base font-semibold">Ödeme Yöntemi</h2>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="cardholder">Cardholder Name</Label>
-                <Input id="cardholder" placeholder="Ada Lovelace" autoComplete="cc-name" />
+                <Label htmlFor="cardholder">Kart Üzerindeki İsim</Label>
+                <Input id="cardholder" placeholder="Ad Soyad" autoComplete="cc-name" />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="cardnumber">Card Number</Label>
+                <Label htmlFor="cardnumber">Kart Numarası</Label>
                 <Input
                   id="cardnumber"
                   placeholder="4242 4242 4242 4242"
@@ -108,8 +108,8 @@ export function UpgradePanel({ isPro, status }: UpgradePanelProps) {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="expiry">Expiry</Label>
-                  <Input id="expiry" placeholder="MM / YY" autoComplete="cc-exp" />
+                  <Label htmlFor="expiry">Son Kullanma</Label>
+                  <Input id="expiry" placeholder="AA / YY" autoComplete="cc-exp" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="cvv">CVV</Label>
@@ -121,9 +121,9 @@ export function UpgradePanel({ isPro, status }: UpgradePanelProps) {
             <div className="flex items-start gap-2 rounded-xl bg-[var(--bg)] p-3 text-xs text-[var(--muted)]">
               <Lock className="mt-0.5 size-4 shrink-0 text-[var(--primary)]" />
               <span>
-                For your security, card details are processed directly by Stripe
-                on their PCI-compliant checkout — they never touch our servers.
-                Clicking “Complete Purchase” redirects you to Stripe.
+                Güvenliğin için kart bilgilerin doğrudan Stripe'ın PCI uyumlu
+                ödeme sayfasında işlenir — bizim sunucularımıza hiç uğramaz.
+                “Ödemeyi Tamamla”ya bastığında Stripe'a yönlendirilirsin.
               </span>
             </div>
           </CardContent>
@@ -132,19 +132,19 @@ export function UpgradePanel({ isPro, status }: UpgradePanelProps) {
         {/* Order Summary */}
         <Card className="h-fit">
           <CardContent className="space-y-5 p-6">
-            <h2 className="text-base font-semibold">Order Summary</h2>
+            <h2 className="text-base font-semibold">Sipariş Özeti</h2>
 
             <div className="rounded-2xl border border-[var(--primary)]/20 bg-[var(--primary)]/5 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold text-[var(--text)]">Creator Pro</p>
-                  <p className="text-xs text-[var(--muted)]">Billed monthly</p>
+                  <p className="text-xs text-[var(--muted)]">Aylık faturalandırılır</p>
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-[var(--text)]">
                     {PRO_PRICE_LABEL}
                   </p>
-                  <p className="text-xs text-[var(--muted)]">/ month</p>
+                  <p className="text-xs text-[var(--muted)]">/ ay</p>
                 </div>
               </div>
             </div>
@@ -164,15 +164,15 @@ export function UpgradePanel({ isPro, status }: UpgradePanelProps) {
 
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-[var(--muted)]">
-                <span>Subtotal</span>
+                <span>Ara Toplam</span>
                 <span>{PRO_PRICE_LABEL}</span>
               </div>
               <div className="flex justify-between text-[var(--muted)]">
-                <span>Tax (0%)</span>
+                <span>Vergi (%0)</span>
                 <span>$0.00</span>
               </div>
               <div className="flex justify-between pt-1 text-base font-bold text-[var(--text)]">
-                <span>Total</span>
+                <span>Toplam</span>
                 <span>{PRO_PRICE_LABEL}</span>
               </div>
             </div>
@@ -187,20 +187,20 @@ export function UpgradePanel({ isPro, status }: UpgradePanelProps) {
             >
               {loading ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" /> Redirecting…
+                  <Loader2 className="size-4 animate-spin" /> Yönlendiriliyor…
                 </>
               ) : (
-                "Complete Purchase"
+                "Ödemeyi Tamamla"
               )}
             </Button>
 
             <Button asChild variant="ghost" size="sm" className="w-full">
-              <Link href="/dashboard">Back to Plans</Link>
+              <Link href="/dashboard">Planlara Dön</Link>
             </Button>
 
             <div className="flex items-center justify-center gap-4 pt-1 text-[11px] text-[var(--muted)]">
               <span className="flex items-center gap-1">
-                <ShieldCheck className="size-3.5" /> PCI Compliant
+                <ShieldCheck className="size-3.5" /> PCI Uyumlu
               </span>
               <span className="flex items-center gap-1">
                 <Lock className="size-3.5" /> 256-bit SSL

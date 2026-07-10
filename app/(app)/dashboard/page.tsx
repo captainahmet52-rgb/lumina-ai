@@ -22,7 +22,8 @@ export default async function DashboardPage() {
             Yeni İçerik Oluştur
           </h1>
           <p className="mt-1 text-sm text-muted">
-            Ürün görselini yükle, ürün adını yaz, Lumina videoyu oluştursun.
+            Karakter ve ürün görselini yükle, videonu anlat; Lumina Türkçe
+            konuşan videonu oluştursun.
           </p>
         </div>
 

@@ -4,7 +4,7 @@ import { getSessionProfile } from "@/lib/data/profile";
 import { Topbar } from "@/components/app/topbar";
 import { UpgradePanel } from "@/components/payments/upgrade-panel";
 
-export const metadata: Metadata = { title: "Upgrade to Creator Pro" };
+export const metadata: Metadata = { title: "Creator Pro'ya Geç" };
 
 export default async function PaymentsPage({
   searchParams,
@@ -22,15 +22,15 @@ export default async function PaymentsPage({
     <>
       <Topbar
         profile={session.profile}
-        searchPlaceholder="Search plans and billing…"
+        searchPlaceholder="Plan ve faturalarda ara…"
       />
       <div className="mx-auto w-full max-w-5xl space-y-7 px-4 py-7 sm:px-8">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            Complete your upgrade to Creator Pro
+            Creator Pro aboneliğini tamamla
           </h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Unlock unlimited generations, commercial rights and 4K exports.
+            Sınırsız üretim, ticari kullanım hakkı ve 4K indirmenin kilidini aç.
           </p>
         </div>
 

@@ -11,7 +11,7 @@ import { ProfileForm } from "@/components/settings/profile-form";
 import { signOut } from "@/app/auth/actions";
 import { FREE_PLAN_CREDITS } from "@/lib/constants";
 
-export const metadata: Metadata = { title: "Settings" };
+export const metadata: Metadata = { title: "Ayarlar" };
 
 export default async function SettingsPage() {
   const session = await getSessionProfile();
@@ -22,19 +22,19 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <Topbar profile={profile} searchPlaceholder="Search settings…" />
+      <Topbar profile={profile} searchPlaceholder="Ayarlarda ara…" />
       <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-7 sm:px-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Ayarlar</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Manage your profile and subscription.
+            Profilini ve aboneliğini yönet.
           </p>
         </div>
 
-        {/* Profile */}
+        {/* Profil */}
         <Card>
           <CardHeader>
-            <CardTitle>Profile</CardTitle>
+            <CardTitle>Profil</CardTitle>
           </CardHeader>
           <CardContent>
             <ProfileForm
@@ -48,7 +48,7 @@ export default async function SettingsPage() {
         {/* Plan */}
         <Card>
           <CardHeader>
-            <CardTitle>Subscription</CardTitle>
+            <CardTitle>Abonelik</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4">
@@ -59,7 +59,7 @@ export default async function SettingsPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="font-semibold">
-                      {isPro ? "Creator Pro" : "Free plan"}
+                      {isPro ? "Creator Pro" : "Ücretsiz Plan"}
                     </p>
                     <Badge variant={isPro ? "default" : "muted"}>
                       {profile.subscription_status}
@@ -67,29 +67,29 @@ export default async function SettingsPage() {
                   </div>
                   <p className="text-sm text-[var(--muted)]">
                     {isPro
-                      ? "Unlimited generations · commercial rights · 4K exports"
-                      : `${profile.credits} of ${FREE_PLAN_CREDITS} trial credits remaining`}
+                      ? "Sınırsız üretim · ticari kullanım hakkı · 4K indirme"
+                      : `${FREE_PLAN_CREDITS} deneme kredisinden ${profile.credits} tanesi kaldı`}
                   </p>
                 </div>
               </div>
               {!isPro && (
                 <Button asChild>
-                  <Link href="/payments">Upgrade</Link>
+                  <Link href="/payments">Pro&apos;ya Geç</Link>
                 </Button>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Account */}
+        {/* Hesap */}
         <Card>
           <CardHeader>
-            <CardTitle>Account</CardTitle>
+            <CardTitle>Hesap</CardTitle>
           </CardHeader>
           <CardContent>
             <form action={signOut}>
               <Button type="submit" variant="outline">
-                <LogOut className="size-4" /> Sign out
+                <LogOut className="size-4" /> Çıkış Yap
               </Button>
             </form>
           </CardContent>

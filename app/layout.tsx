@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     template: `%s · ${APP_NAME}`,
   },
   description:
-    "Turn a product photo + a prompt into cinematic AI-generated UGC video and imagery.",
+    "Karakter ve ürün fotoğrafını yükle, Lumina yapay zekâ ile Türkçe konuşan UGC videonu üretsin.",
 };
 
 export const viewport: Viewport = {
@@ -19,7 +19,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="tr">
       <body className="min-h-dvh bg-[var(--bg)] text-[var(--text)] antialiased">
         {children}
       </body>

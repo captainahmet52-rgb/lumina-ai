@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ContentCard } from "@/components/content/content-card";
 import type { Generation } from "@/lib/types";
 
-export const metadata: Metadata = { title: "My Content" };
+export const metadata: Metadata = { title: "İçeriklerim" };
 
 export default async function MyContentPage() {
   const session = await getSessionProfile();
@@ -26,19 +26,18 @@ export default async function MyContentPage() {
 
   return (
     <>
-      <Topbar profile={session.profile} searchPlaceholder="Search your content…" />
+      <Topbar profile={session.profile} searchPlaceholder="İçeriklerinde ara…" />
       <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-7 sm:px-8">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">My Content</h1>
+            <h1 className="text-2xl font-bold tracking-tight">İçeriklerim</h1>
             <p className="mt-1 text-sm text-[var(--muted)]">
-              {generations.length} generation
-              {generations.length === 1 ? "" : "s"} in your library.
+              Kütüphanende {generations.length} video var.
             </p>
           </div>
           <Button asChild>
             <Link href="/dashboard">
-              <Sparkles className="size-4" /> Create New
+              <Sparkles className="size-4" /> Yeni Oluştur
             </Link>
           </Button>
         </div>
@@ -49,14 +48,14 @@ export default async function MyContentPage() {
               <Images className="size-7" />
             </div>
             <div className="space-y-1">
-              <h2 className="text-lg font-semibold">No content yet</h2>
+              <h2 className="text-lg font-semibold">Henüz içerik yok</h2>
               <p className="text-sm text-[var(--muted)]">
-                Generate your first AI asset to see it here.
+                İlk videonu oluştur, burada görünsün.
               </p>
             </div>
             <Button asChild>
               <Link href="/dashboard">
-                <Sparkles className="size-4" /> Create New Content
+                <Sparkles className="size-4" /> Yeni Video Oluştur
               </Link>
             </Button>
           </div>

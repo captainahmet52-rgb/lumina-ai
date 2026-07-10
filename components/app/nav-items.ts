@@ -13,8 +13,8 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/my-content", label: "My Content", icon: Images },
-  { href: "/payments", label: "Payments", icon: CreditCard },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard", label: "Panel", icon: LayoutDashboard },
+  { href: "/my-content", label: "İçeriklerim", icon: Images },
+  { href: "/payments", label: "Ödeme", icon: CreditCard },
+  { href: "/settings", label: "Ayarlar", icon: Settings },
 ];

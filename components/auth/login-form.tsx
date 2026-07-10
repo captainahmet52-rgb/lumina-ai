@@ -41,12 +41,12 @@ export function LoginForm({ next }: { next?: string }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="email">Email Address</Label>
+        <Label htmlFor="email">E-posta Adresi</Label>
         <Input
           id="email"
           type="email"
           autoComplete="email"
-          placeholder="you@studio.com"
+          placeholder="ornek@eposta.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -55,12 +55,12 @@ export function LoginForm({ next }: { next?: string }) {
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">Şifre</Label>
           <Link
             href="/forgot-password"
             className="text-xs font-medium text-[var(--primary)] hover:underline"
           >
-            Forgot?
+            Unuttun mu?
           </Link>
         </div>
         <Input
@@ -81,7 +81,7 @@ export function LoginForm({ next }: { next?: string }) {
           checked={stayLoggedIn}
           onChange={(e) => setStayLoggedIn(e.target.checked)}
         />
-        Stay logged in for 30 days
+        30 gün oturumum açık kalsın
       </label>
 
       {error && (
@@ -92,7 +92,7 @@ export function LoginForm({ next }: { next?: string }) {
 
       <Button type="submit" size="lg" className="w-full" disabled={loading}>
         {loading && <Loader2 className="size-4 animate-spin" />}
-        Sign in to Studio
+        Stüdyoya Giriş Yap
       </Button>
     </form>
   );

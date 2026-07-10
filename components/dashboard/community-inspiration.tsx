@@ -9,33 +9,33 @@ interface InspirationTile {
 /** Static "Community Inspiration" gallery (spec §3.2 bottom grid). */
 const TILES: InspirationTile[] = [
   {
-    title: "Floating perfume on glass",
-    tag: "Cinematic",
+    title: "Cam üzerinde süzülen parfüm",
+    tag: "Sinematik",
     gradient: "from-violet-500 to-fuchsia-400",
   },
   {
-    title: "Neon sneaker in the rain",
+    title: "Yağmurda neon spor ayakkabı",
     tag: "Neon",
     gradient: "from-indigo-500 to-cyan-400",
   },
   {
-    title: "Skincare on marble",
+    title: "Mermer üzerinde cilt bakımı",
     tag: "Minimal",
     gradient: "from-rose-400 to-orange-300",
   },
   {
-    title: "Coffee bag, morning light",
-    tag: "Lifestyle",
+    title: "Sabah ışığında kahve paketi",
+    tag: "Yaşam Tarzı",
     gradient: "from-amber-500 to-yellow-300",
   },
   {
-    title: "Watch on velvet",
-    tag: "Product Hero",
+    title: "Kadife üzerinde saat",
+    tag: "Ürün Vitrini",
     gradient: "from-emerald-500 to-teal-300",
   },
   {
-    title: "Headphones in studio",
-    tag: "Cinematic",
+    title: "Stüdyoda kulaklık",
+    tag: "Sinematik",
     gradient: "from-purple-600 to-violet-400",
   },
 ];
@@ -45,9 +45,9 @@ export function CommunityInspiration() {
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold">Community Inspiration</h2>
+          <h2 className="text-base font-semibold">Topluluktan İlham</h2>
           <p className="text-sm text-[var(--muted)]">
-            Prompts trending across the Lumina community.
+            Lumina topluluğunda öne çıkan fikirler.
           </p>
         </div>
       </div>

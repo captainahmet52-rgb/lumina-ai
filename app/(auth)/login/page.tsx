@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { GoogleButton } from "@/components/auth/google-button";
 import { LoginForm } from "@/components/auth/login-form";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = { title: "Giriş Yap" };
 
 export default async function LoginPage({
   searchParams,
@@ -17,9 +17,9 @@ export default async function LoginPage({
     <Card className="shadow-card-lg">
       <CardContent className="space-y-6 p-7 sm:p-8">
         <div className="space-y-1.5 text-center">
-          <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Tekrar hoş geldin</h1>
           <p className="text-sm text-[var(--muted)]">
-            Enter your details to access your studio.
+            Stüdyona erişmek için bilgilerini gir.
           </p>
         </div>
 
@@ -28,7 +28,7 @@ export default async function LoginPage({
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-[var(--border)]" />
           <span className="text-[11px] font-semibold tracking-wider text-[var(--muted)]">
-            OR EMAIL
+            VEYA E-POSTA
           </span>
           <div className="h-px flex-1 bg-[var(--border)]" />
         </div>
@@ -36,12 +36,12 @@ export default async function LoginPage({
         <LoginForm next={redirectedFrom} />
 
         <p className="text-center text-sm text-[var(--muted)]">
-          New to Lumina AI?{" "}
+          Lumina AI&apos;da yeni misin?{" "}
           <Link
             href="/signup"
             className="font-semibold text-[var(--primary)] hover:underline"
           >
-            Create a free account
+            Ücretsiz hesap oluştur
           </Link>
         </p>
       </CardContent>

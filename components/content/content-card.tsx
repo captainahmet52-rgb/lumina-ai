@@ -13,20 +13,20 @@ function StatusBadge({ status }: { status: Generation["status"] }) {
   if (status === "completed") {
     return (
       <Badge variant="success">
-        <CheckCircle2 className="size-3" /> Complete
+        <CheckCircle2 className="size-3" /> Tamamlandı
       </Badge>
     );
   }
   if (status === "failed") {
     return (
       <Badge variant="danger">
-        <AlertTriangle className="size-3" /> Failed
+        <AlertTriangle className="size-3" /> Başarısız
       </Badge>
     );
   }
   return (
     <Badge variant="warning">
-      <Loader2 className="size-3 animate-spin" /> Working
+      <Loader2 className="size-3 animate-spin" /> Üretiliyor
     </Badge>
   );
 }
@@ -66,7 +66,7 @@ export function ContentCard({ generation }: { generation: Generation }) {
         <div className="flex items-center justify-between text-xs text-[var(--muted)]">
           <span>{styleLabel(generation.style_preset)}</span>
           <span>
-            {new Date(generation.created_at).toLocaleDateString(undefined, {
+            {new Date(generation.created_at).toLocaleDateString("tr-TR", {
               month: "short",
               day: "numeric",
             })}

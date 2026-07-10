@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { GoogleButton } from "@/components/auth/google-button";
 import { SignupForm } from "@/components/auth/signup-form";
 
-export const metadata: Metadata = { title: "Create account" };
+export const metadata: Metadata = { title: "Hesap Oluştur" };
 
 export default function SignupPage() {
   return (
@@ -12,10 +12,10 @@ export default function SignupPage() {
       <CardContent className="space-y-6 p-7 sm:p-8">
         <div className="space-y-1.5 text-center">
           <h1 className="text-2xl font-bold tracking-tight">
-            Create your studio
+            Stüdyonu oluştur
           </h1>
           <p className="text-sm text-[var(--muted)]">
-            Start generating cinematic content in minutes.
+            Dakikalar içinde sinematik içerik üretmeye başla.
           </p>
         </div>
 
@@ -24,7 +24,7 @@ export default function SignupPage() {
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-[var(--border)]" />
           <span className="text-[11px] font-semibold tracking-wider text-[var(--muted)]">
-            OR EMAIL
+            VEYA E-POSTA
           </span>
           <div className="h-px flex-1 bg-[var(--border)]" />
         </div>
@@ -32,12 +32,12 @@ export default function SignupPage() {
         <SignupForm />
 
         <p className="text-center text-sm text-[var(--muted)]">
-          Already have an account?{" "}
+          Zaten hesabın var mı?{" "}
           <Link
             href="/login"
             className="font-semibold text-[var(--primary)] hover:underline"
           >
-            Sign in
+            Giriş yap
           </Link>
         </p>
       </CardContent>

@@ -29,11 +29,11 @@ export function UploadProduct({ userId, value, onChange, bucket = "products" }: 
       setError(null);
 
       if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-        setError("Please upload a PNG, JPG or WEBP file.");
+        setError("Lütfen PNG, JPG veya WEBP dosyası yükle.");
         return;
       }
       if (file.size > MAX_IMAGE_BYTES) {
-        setError("File is too large (max 10MB).");
+        setError("Dosya çok büyük (en fazla 10MB).");
         return;
       }
 
@@ -56,7 +56,7 @@ export function UploadProduct({ userId, value, onChange, bucket = "products" }: 
         onChange(publicUrl);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Upload failed. Try again.",
+          err instanceof Error ? err.message : "Yükleme başarısız. Tekrar dene.",
         );
       } finally {
         setUploading(false);
@@ -77,7 +77,7 @@ export function UploadProduct({ userId, value, onChange, bucket = "products" }: 
       <div className="group relative aspect-square w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)]">
         <Image
           src={value}
-          alt="Uploaded product"
+          alt="Yüklenen görsel"
           fill
           sizes="(max-width: 768px) 100vw, 33vw"
           className="object-contain"
@@ -86,12 +86,12 @@ export function UploadProduct({ userId, value, onChange, bucket = "products" }: 
           type="button"
           onClick={() => onChange(null)}
           className="absolute right-3 top-3 rounded-lg bg-white/90 p-1.5 text-[var(--text)] shadow-card transition-colors hover:bg-white hover:text-red-500"
-          aria-label="Remove image"
+          aria-label="Görseli kaldır"
         >
           <X className="size-4" />
         </button>
         <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-lg bg-white/90 px-2.5 py-1 text-xs font-medium text-[var(--text)] shadow-card">
-          <ImageIcon className="size-3.5 text-[var(--primary)]" /> Product ready
+          <ImageIcon className="size-3.5 text-[var(--primary)]" /> Görsel hazır
         </div>
       </div>
     );
@@ -124,13 +124,13 @@ export function UploadProduct({ userId, value, onChange, bucket = "products" }: 
         </div>
         <div>
           <p className="text-sm font-semibold text-[var(--text)]">
-            {uploading ? "Uploading…" : "Drag & drop your product"}
+            {uploading ? "Yükleniyor…" : "Görseli sürükle & bırak"}
           </p>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            or click to browse · PNG / JPG / WEBP
+            veya tıklayıp seç · PNG / JPG / WEBP
           </p>
           <p className="mt-2 text-xs text-[var(--muted)]">
-            Best results with transparent PNGs
+            En iyi sonuç için arka planı şeffaf PNG kullan
           </p>
         </div>
       </button>

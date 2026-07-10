@@ -52,19 +52,19 @@ export function ProfileForm({ userId, initialName, email }: ProfileFormProps) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="settings-name">Full Name</Label>
+        <Label htmlFor="settings-name">Ad Soyad</Label>
         <Input
           id="settings-name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          placeholder="Your name"
+          placeholder="Adın"
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="settings-email">Email Address</Label>
+        <Label htmlFor="settings-email">E-posta Adresi</Label>
         <Input id="settings-email" value={email} disabled />
         <p className="text-xs text-[var(--muted)]">
-          Email is managed through your sign-in provider.
+          E-posta, giriş yöntemin üzerinden yönetilir.
         </p>
       </div>
 
@@ -73,7 +73,7 @@ export function ProfileForm({ userId, initialName, email }: ProfileFormProps) {
       <Button type="submit" disabled={saving}>
         {saving && <Loader2 className="size-4 animate-spin" />}
         {saved && <Check className="size-4" />}
-        {saved ? "Saved" : "Save changes"}
+        {saved ? "Kaydedildi" : "Değişiklikleri Kaydet"}
       </Button>
     </form>
   );

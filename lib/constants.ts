@@ -26,11 +26,11 @@ export type StylePreset =
   | "neon_futuristic";
 
 export const STYLE_PRESETS: { value: StylePreset; label: string }[] = [
-  { value: "cinematic_studio", label: "Cinematic Studio" },
-  { value: "product_hero", label: "Product Hero" },
-  { value: "lifestyle", label: "Lifestyle" },
-  { value: "minimal_clean", label: "Minimal Clean" },
-  { value: "neon_futuristic", label: "Neon Futuristic" },
+  { value: "cinematic_studio", label: "Sinematik Stüdyo" },
+  { value: "product_hero", label: "Ürün Vitrini" },
+  { value: "lifestyle", label: "Yaşam Tarzı" },
+  { value: "minimal_clean", label: "Sade & Temiz" },
+  { value: "neon_futuristic", label: "Neon Fütüristik" },
 ];
 
 export type GenerationStatus = "pending" | "processing" | "completed" | "failed";
@@ -40,9 +40,9 @@ export const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10MB
 
 export const PRO_FEATURES = [
-  "Unlimited AI Generations",
-  "Commercial Usage Rights",
-  "4K High-Res Exports",
+  "Sınırsız Video Üretimi",
+  "Ticari Kullanım Hakkı",
+  "4K Yüksek Çözünürlük İndirme",
 ];
 
 export const STORAGE_BUCKET_PRODUCTS = "products";

@@ -65,7 +65,7 @@ export function GoogleButton({ next }: { next?: string }) {
         disabled={loading}
       >
         <GoogleIcon />
-        {loading ? "Redirecting…" : "Login with Google"}
+        {loading ? "Yönlendiriliyor…" : "Google ile Giriş Yap"}
       </Button>
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>

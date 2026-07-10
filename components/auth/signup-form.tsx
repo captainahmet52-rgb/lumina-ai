@@ -53,10 +53,10 @@ export function SignupForm() {
     return (
       <div className="flex flex-col items-center gap-3 py-6 text-center">
         <CheckCircle2 className="size-10 text-emerald-500" />
-        <h2 className="text-lg font-semibold">Check your inbox</h2>
+        <h2 className="text-lg font-semibold">E-postanı kontrol et</h2>
         <p className="text-sm text-[var(--muted)]">
-          We sent a confirmation link to <strong>{email}</strong>. Confirm your
-          email to activate your studio.
+          <strong>{email}</strong> adresine bir onay bağlantısı gönderdik.
+          Stüdyonu aktifleştirmek için e-postanı onayla.
         </p>
       </div>
     );
@@ -65,12 +65,12 @@ export function SignupForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="full_name">Full Name</Label>
+        <Label htmlFor="full_name">Ad Soyad</Label>
         <Input
           id="full_name"
           type="text"
           autoComplete="name"
-          placeholder="Ada Lovelace"
+          placeholder="Adın Soyadın"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           required
@@ -78,12 +78,12 @@ export function SignupForm() {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="email">Email Address</Label>
+        <Label htmlFor="email">E-posta Adresi</Label>
         <Input
           id="email"
           type="email"
           autoComplete="email"
-          placeholder="you@studio.com"
+          placeholder="ornek@eposta.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -91,12 +91,12 @@ export function SignupForm() {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">Şifre</Label>
         <Input
           id="password"
           type="password"
           autoComplete="new-password"
-          placeholder="At least 6 characters"
+          placeholder="En az 6 karakter"
           minLength={6}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -112,10 +112,10 @@ export function SignupForm() {
 
       <Button type="submit" size="lg" className="w-full" disabled={loading}>
         {loading && <Loader2 className="size-4 animate-spin" />}
-        Create free account
+        Ücretsiz Hesap Oluştur
       </Button>
       <p className="text-center text-xs text-[var(--muted)]">
-        Free plan includes 3 generation credits.
+        Ücretsiz plan 3 video üretim kredisi içerir.
       </p>
     </form>
   );

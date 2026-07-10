@@ -13,7 +13,7 @@ interface TopbarProps {
 /** Sticky content-area header with the search bar (spec §3.2). */
 export function Topbar({
   profile,
-  searchPlaceholder = "Search assets, concepts, or inspiration...",
+  searchPlaceholder = "İçerik, konsept veya ilham ara...",
 }: TopbarProps) {
   const isPro = profile.plan === "pro";
 
@@ -36,11 +36,11 @@ export function Topbar({
         ) : (
           <>
             <Badge variant="muted" className="hidden sm:inline-flex">
-              {profile.credits} credits left
+              {profile.credits} kredi kaldı
             </Badge>
             <Button asChild size="sm">
               <Link href="/payments">
-                <Zap className="size-4" /> Upgrade
+                <Zap className="size-4" /> Pro&apos;ya Geç
               </Link>
             </Button>
           </>
