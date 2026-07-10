@@ -4,6 +4,7 @@ import { finalizeGeneration } from "@/lib/pipeline";
 import type { Generation } from "@/lib/types";
 
 export const runtime = "nodejs";
+export const maxDuration = 60; // video indirme + faststart + depolama için
 
 /**
  * GET /api/generation/[id]/poll — sonuç ekranı bunu periyodik çağırır.

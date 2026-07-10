@@ -12,10 +12,9 @@ async function imageToBase64(
   };
 }
 
-/** İstenen video süresine göre yaklaşık kelime sayısı (~2.2 kelime/sn). */
-function wordTarget(seconds: number): string {
-  const words = Math.round(seconds * 2.2);
-  return `about ${words} words (roughly ${seconds} seconds of natural speech)`;
+/** İstenen video süresine göre yaklaşık kelime sayısı (~2.1 kelime/sn). */
+function wordTarget(seconds: number): number {
+  return Math.round(seconds * 2.1);
 }
 
 export interface SpeechInput {
@@ -26,13 +25,23 @@ export interface SpeechInput {
   seconds: number;
 }
 
+export interface SpeechResult {
+  /** Karakterin görünen cinsiyeti — ses seçimi için. */
+  gender: "male" | "female";
+  /** Karakterin söyleyeceği Türkçe metin (ElevenLabs v3 ses etiketleri dahil). */
+  text: string;
+}
+
 /**
  * Claude Haiku — karakter + ürün görselini görür, kullanıcının istediği tarza
  * göre karakterin söyleyeceği TÜRKÇE konuşma metnini üretir.
- * Sadece söylenen kelimeler döner (sahne yönergesi yok) — bu metin ElevenLabs'e
- * ses olarak, oradan da Kling AI Avatar'a gider.
+ * Gerçek bir insanın telefonuna çektiği video gibi: dolgu kelimeleri,
+ * yarım cümleler, doğal duraksamalar. Reklam dili YASAK.
+ * Ayrıca karakterin cinsiyetini döner (doğru sesi seçmek için).
  */
-export async function generateTurkishSpeech(input: SpeechInput): Promise<string> {
+export async function generateTurkishSpeech(
+  input: SpeechInput,
+): Promise<SpeechResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY eksik.");
 
@@ -41,19 +50,35 @@ export async function generateTurkishSpeech(input: SpeechInput): Promise<string>
     imageToBase64(input.productImageUrl),
   ]);
 
-  const instruction = `You write UGC ad scripts. Image 1 = the CHARACTER who will speak in the video. Image 2 = the PRODUCT being advertised.
+  const words = wordTarget(input.seconds);
 
-USER DIRECTION (follow this exactly): ${input.videoPrompt}
-PRODUCT NAME: ${input.productName}
+  const instruction = `Görsel 1 = videoda konuşacak KARAKTER. Görsel 2 = tanıtılacak ÜRÜN.
 
-Write ONLY the words the character SAYS out loud, in TURKISH. Requirements:
-- Natural, casual, authentic — like a real person filming a UGC ad on their phone
-- Match the user's direction (funny, sincere, energetic, etc.)
-- Length: ${wordTarget(input.seconds)}
-- Talk about the product naturally, mention what's visible in the product image
-- NO stage directions, NO quotation marks, NO English — only the spoken Turkish words
+KULLANICININ İSTEĞİ (buna birebir uy): ${input.videoPrompt}
+ÜRÜN ADI: ${input.productName}
 
-Return only the spoken text, nothing else.`;
+GÖREV: Bu karakterin telefon kamerasına konuşurken söyleyeceği TÜRKÇE metni yaz. Bu bir reklam DEĞİL — bir arkadaşına ürünü anlatan gerçek bir insan videosu.
+
+GERÇEK İNSAN GİBİ YAZ — kurallar:
+- Konuşma dili kullan: "ya", "yani", "bak şimdi", "cidden", "vallahi", "falan" gibi dolgu ifadeleri DOĞAL yerlerde kullan (her cümlede değil, gerçek insanlar gibi ara ara)
+- Yarım cümleler, kendi kendini düzeltmeler serbest: "İki haftadır... yok üç hafta oldu galiba kullanıyorum"
+- Kişisel mini hikâye kur: nereden duydu, ilk izlenimi neydi, ne değişti
+- Kusur/şüphe ekle, %100 övgü YAPMA: "önce inanmadım açıkçası", "fiyatı biraz tuzlu ama"
+- Devrik cümle serbest: "Çok iyi geldi bana bu ya"
+
+KESİNLİKLE YASAK (yapay zekâ/reklam kokan ifadeler):
+- "kesinlikle tavsiye ederim", "hayatımı değiştirdi", "devrim niteliğinde"
+- "mükemmel", "muhteşem", "harika bir ürün", "kaçırmayın", "denemelisiniz"
+- Ürün özelliklerini liste gibi saymak
+- Kusursuz, düzgün kurulmuş uzun cümleler
+
+SES ETİKETLERİ (ElevenLabs v3): Metnin içine EN FAZLA 2-3 tane, doğal anlarda köşeli parantezle İngilizce etiket koy: [laughs] (gülme), [sighs] (iç çekme), [exhales] (nefes verme). Örnek: "Önce dedim ki yok artık [laughs] ama cidden işe yarıyor ya."
+
+UZUNLUK: yaklaşık ${words} kelime (~${input.seconds} saniyelik doğal konuşma). Etiketler kelime sayılmaz.
+
+ÇIKTI FORMATI — tam olarak şöyle, kod bloğu/açıklama YOK:
+İlk satır: CINSIYET: erkek  (veya  CINSIYET: kadin — Görsel 1'deki karakterin görünen cinsiyeti)
+Sonraki satırlar: sadece söylenecek Türkçe konuşma metni.`;
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -85,6 +110,32 @@ Return only the spoken text, nothing else.`;
   const data = (await res.json()) as {
     content: { type: string; text?: string }[];
   };
-  const text = data.content.find((c) => c.type === "text")?.text ?? "";
-  return text.trim();
+  const raw = data.content.find((c) => c.type === "text")?.text ?? "";
+
+  return parseSpeechResult(raw);
+}
+
+/**
+ * Claude çıktısını ayıklar. Beklenen format:
+ *   CINSIYET: erkek|kadin
+ *   <konuşma metni>
+ * Format bozulsa bile konuşma metnini kurtarır (kod bloğu vb. temizler).
+ */
+function parseSpeechResult(raw: string): SpeechResult {
+  // Olası kod bloklarını temizle.
+  let cleaned = raw.replace(/```[a-z]*\n?/gi, "").trim();
+
+  let gender: SpeechResult["gender"] = "female";
+  const genderMatch = cleaned.match(
+    /^\s*(?:CINSIYET|CİNSİYET|GENDER)\s*[:=]\s*(erkek|kadin|kadın|male|female)\s*/im,
+  );
+  if (genderMatch) {
+    const g = genderMatch[1].toLowerCase();
+    gender = g === "erkek" || g === "male" ? "male" : "female";
+    // Cinsiyet satırını metinden çıkar.
+    cleaned = cleaned.replace(genderMatch[0], "").trim();
+  }
+
+  if (!cleaned) throw new Error("Claude boş metin döndürdü.");
+  return { gender, text: cleaned };
 }

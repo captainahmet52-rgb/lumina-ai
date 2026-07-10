@@ -7,6 +7,7 @@ import {
   checkAvatarJob,
   type AvatarQuality,
 } from "@/lib/ai/fal-avatar";
+import { faststart } from "@/lib/video/faststart";
 import type { Generation, GenerationMetadata } from "@/lib/types";
 
 export type StartInput = {
@@ -26,8 +27,8 @@ async function update(generationId: string, patch: Partial<Generation>) {
 
 /**
  * FAZ 1 (serverless-safe, /api/generate içinde await edilir, ~10-15sn):
- * Claude → TR metin, ElevenLabs → ses, fal'a video işini KUYRUĞA gönderir.
- * request_id'yi metadata'ya yazar; uzun video üretimini beklemez.
+ * Claude → TR metin + cinsiyet, ElevenLabs (v3) → ses, fal'a video işini
+ * KUYRUĞA gönderir. request_id'yi metadata'ya yazar; üretimi beklemez.
  */
 export async function startGeneration(input: StartInput): Promise<void> {
   const {
@@ -60,9 +61,13 @@ export async function startGeneration(input: StartInput): Promise<void> {
     });
 
     await update(generationId, {
-      metadata: { ...baseMeta, step: "Türkçe ses üretiliyor…", spoken_text: speech },
+      metadata: {
+        ...baseMeta,
+        step: "Türkçe ses üretiliyor…",
+        spoken_text: speech.text,
+      },
     });
-    const audio = await turkishSpeech(speech);
+    const audio = await turkishSpeech(speech.text, speech.gender);
     const audioUrl = await uploadAudio(audio);
 
     const requestId = await submitAvatarJob(characterImageUrl, audioUrl, quality);
@@ -71,7 +76,7 @@ export async function startGeneration(input: StartInput): Promise<void> {
       metadata: {
         ...baseMeta,
         step: "Video üretiliyor… (2-4 dk sürebilir)",
-        spoken_text: speech,
+        spoken_text: speech.text,
         fal_request_id: requestId,
       },
     });
@@ -85,9 +90,45 @@ export async function startGeneration(input: StartInput): Promise<void> {
 }
 
 /**
+ * fal'ın döndürdüğü videoyu indirir, faststart uygular (açılış kasması fix'i)
+ * ve Supabase `outputs` bucket'ına kalıcı olarak yükler.
+ * Herhangi bir adım patlarsa fal URL'sine geri döner (video yine izlenir).
+ */
+async function storeVideo(
+  generation: Generation,
+  falVideoUrl: string,
+): Promise<string> {
+  try {
+    const res = await fetch(falVideoUrl);
+    if (!res.ok) return falVideoUrl;
+
+    const raw = Buffer.from(await res.arrayBuffer());
+    const optimized = faststart(raw);
+
+    const admin = createAdminClient();
+    const path = `${generation.user_id}/${generation.id}.mp4`;
+    const { error } = await admin.storage
+      .from("outputs")
+      .upload(path, optimized, {
+        contentType: "video/mp4",
+        cacheControl: "3600",
+        upsert: true,
+      });
+    if (error) return falVideoUrl;
+
+    const {
+      data: { publicUrl },
+    } = admin.storage.from("outputs").getPublicUrl(path);
+    return publicUrl;
+  } catch {
+    return falVideoUrl;
+  }
+}
+
+/**
  * FAZ 2 (sonuç ekranı yoklarken çağrılır):
- * fal kuyruğunu kontrol eder; video bittiyse kaydı `completed` yapar.
- * Döndürdüğü: güncel Generation satırı.
+ * fal kuyruğunu kontrol eder; video bittiyse faststart + kalıcı depolama
+ * yapıp kaydı `completed` işaretler. Döndürdüğü: güncel Generation satırı.
  */
 export async function finalizeGeneration(
   generation: Generation,
@@ -106,10 +147,12 @@ export async function finalizeGeneration(
     const job = await checkAvatarJob(requestId, quality);
 
     if (job.status === "COMPLETED" && job.videoUrl) {
+      const videoUrl = await storeVideo(generation, job.videoUrl);
+
       const admin = createAdminClient();
       const patch: Partial<Generation> = {
         status: "completed",
-        video_url: job.videoUrl,
+        video_url: videoUrl,
         completed_at: new Date().toISOString(),
         metadata: { ...meta, step: "Tamamlandı" },
       };

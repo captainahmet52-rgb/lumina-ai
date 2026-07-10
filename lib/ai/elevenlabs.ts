@@ -1,12 +1,40 @@
 /**
  * ElevenLabs — Türkçe metin → ses (text-to-speech).
- * eleven_multilingual_v2 Türkçe'yi destekler.
+ * Varsayılan model: eleven_v3 — en doğal model; [laughs], [sighs] gibi
+ * ses etiketlerini gerçek insan tepkisine çevirir (robotik ses fix'i).
+ * Ses, karakterin cinsiyetine göre seçilir (erkek yüze kadın ses = sahte).
  */
-export async function turkishSpeech(text: string): Promise<Buffer> {
+
+const DEFAULT_MODEL = "eleven_v3";
+
+/** Cinsiyete göre varsayılan sesler (env ile ezilebilir). */
+const DEFAULT_VOICES = {
+  female: "21m00Tcm4TlvDq8ikWAM", // Rachel
+  male: "pNInz6obpgDQGcFmaJgB", // Adam
+} as const;
+
+export type VoiceGender = keyof typeof DEFAULT_VOICES;
+
+function pickVoice(gender: VoiceGender): string {
+  // Tek ses zorlamak istersen ELEVENLABS_VOICE_ID her şeyi ezer.
+  const forced = process.env.ELEVENLABS_VOICE_ID;
+  if (forced) return forced;
+
+  if (gender === "male") {
+    return process.env.ELEVENLABS_VOICE_ID_MALE || DEFAULT_VOICES.male;
+  }
+  return process.env.ELEVENLABS_VOICE_ID_FEMALE || DEFAULT_VOICES.female;
+}
+
+export async function turkishSpeech(
+  text: string,
+  gender: VoiceGender = "female",
+): Promise<Buffer> {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   if (!apiKey) throw new Error("ELEVENLABS_API_KEY eksik.");
 
-  const voiceId = process.env.ELEVENLABS_VOICE_ID || "EXAVITQu4vr4xnSDxMaL";
+  const voiceId = pickVoice(gender);
+  const modelId = process.env.ELEVENLABS_MODEL_ID || DEFAULT_MODEL;
 
   const res = await fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
@@ -19,13 +47,9 @@ export async function turkishSpeech(text: string): Promise<Buffer> {
       },
       body: JSON.stringify({
         text,
-        model_id: "eleven_multilingual_v2",
-        voice_settings: {
-          stability: 0.4,
-          similarity_boost: 0.85,
-          style: 0.5,
-          use_speaker_boost: true,
-        },
+        model_id: modelId,
+        // v3'te stability yalnızca 0.0 / 0.5 / 1.0 kabul eder; 0.5 = "Natural".
+        voice_settings: { stability: 0.5 },
       }),
     },
   );
