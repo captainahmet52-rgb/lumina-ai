@@ -7,9 +7,13 @@
 
 const DEFAULT_MODEL = "eleven_v3";
 
-/** Cinsiyete göre varsayılan sesler (env ile ezilebilir). */
+/**
+ * Cinsiyete göre varsayılan sesler (env ile ezilebilir).
+ * NOT: Ücretsiz ElevenLabs planı API'den kütüphane sesi kullandırmaz (402);
+ * bu ikisi hesapta hazır gelen seslerdir — test edilip doğrulandı.
+ */
 const DEFAULT_VOICES = {
-  female: "21m00Tcm4TlvDq8ikWAM", // Rachel
+  female: "EXAVITQu4vr4xnSDxMaL", // Sarah
   male: "pNInz6obpgDQGcFmaJgB", // Adam
 } as const;
 
