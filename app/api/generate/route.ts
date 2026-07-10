@@ -106,6 +106,8 @@ export async function POST(request: NextRequest) {
   // Faz 1: metin + ses + fal kuyruğa gönder (await — ~10-15sn, serverless-safe)
   await startGeneration({
     generationId,
+    userId: user.id,
+    charged: plan !== "pro",
     characterImageUrl,
     productImageUrl,
     productName,

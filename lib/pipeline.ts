@@ -12,6 +12,9 @@ import type { Generation, GenerationMetadata } from "@/lib/types";
 
 export type StartInput = {
   generationId: string;
+  userId: string;
+  /** Bu üretim için kredi düşüldü mü? (pro planda düşülmez) */
+  charged: boolean;
   characterImageUrl: string;
   productImageUrl: string;
   productName: string;
@@ -25,6 +28,21 @@ async function update(generationId: string, patch: Partial<Generation>) {
   await admin.from("generations").update(patch).eq("id", generationId);
 }
 
+/** Başarısız üretimde düşülen krediyi geri verir. */
+async function refundCredit(userId: string) {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("profiles")
+    .select("credits")
+    .eq("id", userId)
+    .maybeSingle();
+  const current = (data?.credits as number) ?? 0;
+  await admin
+    .from("profiles")
+    .update({ credits: current + 1 })
+    .eq("id", userId);
+}
+
 /**
  * FAZ 1 (serverless-safe, /api/generate içinde await edilir, ~10-15sn):
  * Claude → TR metin + cinsiyet, ElevenLabs (v3) → ses, fal'a video işini
@@ -33,6 +51,8 @@ async function update(generationId: string, patch: Partial<Generation>) {
 export async function startGeneration(input: StartInput): Promise<void> {
   const {
     generationId,
+    userId,
+    charged,
     characterImageUrl,
     productImageUrl,
     productName,
@@ -45,6 +65,7 @@ export async function startGeneration(input: StartInput): Promise<void> {
     product_name: productName,
     character_image_url: characterImageUrl,
     fal_quality: quality,
+    charged,
   };
 
   try {
@@ -81,10 +102,12 @@ export async function startGeneration(input: StartInput): Promise<void> {
       },
     });
   } catch (err) {
+    if (charged) await refundCredit(userId);
     await update(generationId, {
       status: "failed",
       error: err instanceof Error ? err.message : "Üretim hatası",
       completed_at: new Date().toISOString(),
+      metadata: { ...baseMeta, refunded: charged },
     });
   }
 }
@@ -161,11 +184,16 @@ export async function finalizeGeneration(
     }
 
     if (job.status === "ERROR") {
+      // Kredi iadesi (bir kez): kredi düşülmüş ve daha önce iade edilmemişse.
+      if (meta.charged === true && meta.refunded !== true) {
+        await refundCredit(generation.user_id);
+      }
       const admin = createAdminClient();
       const patch: Partial<Generation> = {
         status: "failed",
-        error: "Video üretimi başarısız oldu.",
+        error: "Video üretimi başarısız oldu. Kredin iade edildi.",
         completed_at: new Date().toISOString(),
+        metadata: { ...meta, refunded: meta.charged === true },
       };
       await admin.from("generations").update(patch).eq("id", generation.id);
       return { ...generation, ...patch } as Generation;
