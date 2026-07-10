@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateTurkishSpeech } from "@/lib/ai/claude";
 import { turkishSpeech } from "@/lib/ai/elevenlabs";
+import { applyProductToCharacter } from "@/lib/ai/fal-edit";
 import {
   uploadAudio,
   submitAvatarJob,
@@ -84,20 +85,30 @@ export async function startGeneration(input: StartInput): Promise<void> {
     await update(generationId, {
       metadata: {
         ...baseMeta,
-        step: "Türkçe ses üretiliyor…",
+        step: "Ürün karaktere uygulanıyor + Türkçe ses üretiliyor…",
         spoken_text: speech.text,
       },
     });
-    const audio = await turkishSpeech(speech.text, speech.gender);
-    const audioUrl = await uploadAudio(audio);
 
-    const requestId = await submitAvatarJob(characterImageUrl, audioUrl, quality);
+    // Ürünü karaktere görsel olarak uygula (Nano Banana) — TTS ile PARALEL.
+    // Uygulama patlarsa orijinal karakter görseliyle devam (video yine çıkar).
+    const [editedImageUrl, audioUrl] = await Promise.all([
+      applyProductToCharacter(
+        characterImageUrl,
+        productImageUrl,
+        speech.scene,
+      ).catch(() => characterImageUrl),
+      turkishSpeech(speech.text, speech.gender).then(uploadAudio),
+    ]);
+
+    const requestId = await submitAvatarJob(editedImageUrl, audioUrl, quality);
 
     await update(generationId, {
       metadata: {
         ...baseMeta,
         step: "Video üretiliyor… (2-4 dk sürebilir)",
         spoken_text: speech.text,
+        edited_image_url: editedImageUrl,
         fal_request_id: requestId,
       },
     });

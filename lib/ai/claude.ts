@@ -30,6 +30,11 @@ export interface SpeechResult {
   gender: "male" | "female";
   /** Karakterin söyleyeceği Türkçe metin (ElevenLabs v3 ses etiketleri dahil). */
   text: string;
+  /**
+   * Görüntü düzenleme modeli için İngilizce sahne talimatı:
+   * ürün karaktere nasıl uygulanacak (giyilecek / tutulacak / yanında duracak).
+   */
+  scene: string;
 }
 
 /**
@@ -77,8 +82,9 @@ SES ETİKETLERİ (ElevenLabs v3): Metnin içine EN FAZLA 2-3 tane, doğal anlard
 UZUNLUK: yaklaşık ${words} kelime (~${input.seconds} saniyelik doğal konuşma). Etiketler kelime sayılmaz.
 
 ÇIKTI FORMATI — tam olarak şöyle, kod bloğu/açıklama YOK:
-İlk satır: CINSIYET: erkek  (veya  CINSIYET: kadin — Görsel 1'deki karakterin görünen cinsiyeti)
-Sonraki satırlar: sadece söylenecek Türkçe konuşma metni.`;
+1. satır → CINSIYET: erkek  (veya  CINSIYET: kadin — Görsel 1'deki karakterin görünen cinsiyeti)
+2. satır → SAHNE: <İNGİLİZCE tek satır görüntü düzenleme talimatı: Görsel 2'deki ürün, Görsel 1'deki karaktere GÖRSEL olarak nasıl uygulanmalı? Giyilebilir ürünse (peruk, takı, gözlük, kıyafet...) karakter onu GİYMİŞ/TAKMIŞ olsun; elde tutulur ürünse (parfüm, telefon, kavanoz...) kameraya gösterir şekilde ELİNDE olsun. Karakterin yüzü, kimliği ve arka plan korunmalı. Örn: "The woman from image 1 wearing the long dark braided hair extensions from image 2, hair looks naturally attached, keep her face identity and background unchanged, realistic photo">
+Sonraki satırlar → sadece söylenecek Türkçe konuşma metni.`;
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -118,6 +124,7 @@ Sonraki satırlar: sadece söylenecek Türkçe konuşma metni.`;
 /**
  * Claude çıktısını ayıklar. Beklenen format:
  *   CINSIYET: erkek|kadin
+ *   SAHNE: <ingilizce görüntü talimatı>
  *   <konuşma metni>
  * Format bozulsa bile konuşma metnini kurtarır (kod bloğu vb. temizler).
  */
@@ -136,6 +143,13 @@ function parseSpeechResult(raw: string): SpeechResult {
     cleaned = cleaned.replace(genderMatch[0], "").trim();
   }
 
+  let scene = "";
+  const sceneMatch = cleaned.match(/^\s*(?:SAHNE|SCENE)\s*[:=]\s*(.+)\s*$/im);
+  if (sceneMatch) {
+    scene = sceneMatch[1].trim();
+    cleaned = cleaned.replace(sceneMatch[0], "").trim();
+  }
+
   if (!cleaned) throw new Error("Claude boş metin döndürdü.");
-  return { gender, text: cleaned };
+  return { gender, text: cleaned, scene };
 }
