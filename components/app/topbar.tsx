@@ -40,7 +40,7 @@ export function Topbar({
             </Badge>
             <Button asChild size="sm">
               <Link href="/payments">
-                <Zap className="size-4" /> Pro&apos;ya Geç
+                <Zap className="size-4" /> Kredi Al
               </Link>
             </Button>
           </>

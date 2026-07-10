@@ -3,15 +3,13 @@ import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { env } from "@/lib/env";
-import type { Profile } from "@/lib/types";
 
-// Stripe needs the raw, unparsed body to verify the signature.
+// Stripe imza doğrulaması için ham (parse edilmemiş) gövde gerekir.
 export const runtime = "nodejs";
 
 /**
- * POST /api/webhook/stripe — sync subscription state to `profiles` (spec §9).
- * checkout.session.completed / customer.subscription.updated → plan = 'pro'
- * customer.subscription.deleted → plan = 'free'
+ * POST /api/webhook/stripe — tek seferlik kredi ödemesini işler.
+ * checkout.session.completed → paketteki kredi kadar profil kredisini artırır.
  */
 export async function POST(request: NextRequest) {
   const signature = request.headers.get("stripe-signature");
@@ -39,7 +37,7 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient();
 
-  /** Resolve the Supabase user id from a Stripe customer / metadata. */
+  /** Stripe müşteri / metadata'dan Supabase kullanıcı id'sini çözer. */
   async function resolveUserId(
     customerId: string | null,
     metadataUserId?: string | null,
@@ -54,73 +52,37 @@ export async function POST(request: NextRequest) {
     return (data?.id as string) ?? null;
   }
 
-  async function setPlan(
-    userId: string,
-    plan: "free" | "pro",
-    status: string,
-    customerId?: string,
-  ) {
-    const update: Partial<Profile> = {
-      plan,
-      subscription_status: status,
-    };
-    if (customerId) update.stripe_customer_id = customerId;
-    await admin.from("profiles").update(update).eq("id", userId);
+  /** Kullanıcının kredisini `amount` kadar artırır. */
+  async function addCredits(userId: string, amount: number) {
+    const { data } = await admin
+      .from("profiles")
+      .select("credits")
+      .eq("id", userId)
+      .maybeSingle();
+    const current = (data?.credits as number) ?? 0;
+    await admin
+      .from("profiles")
+      .update({ credits: current + amount })
+      .eq("id", userId);
   }
 
-  switch (event.type) {
-    case "checkout.session.completed": {
-      const session = event.data.object as Stripe.Checkout.Session;
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session;
+
+    // Yalnızca ödeme tamamlandıysa krediyi ekle.
+    if (session.payment_status === "paid") {
       const customerId =
         typeof session.customer === "string" ? session.customer : null;
       const userId = await resolveUserId(
         customerId,
         session.metadata?.supabase_user_id,
       );
-      if (userId) {
-        await setPlan(userId, "pro", "active", customerId ?? undefined);
-      }
-      break;
-    }
+      const credits = Number(session.metadata?.credits ?? 0);
 
-    case "customer.subscription.created":
-    case "customer.subscription.updated": {
-      const sub = event.data.object as Stripe.Subscription;
-      const customerId =
-        typeof sub.customer === "string" ? sub.customer : null;
-      const userId = await resolveUserId(
-        customerId,
-        sub.metadata?.supabase_user_id,
-      );
-      if (userId) {
-        const isActive = sub.status === "active" || sub.status === "trialing";
-        await setPlan(
-          userId,
-          isActive ? "pro" : "free",
-          sub.status,
-          customerId ?? undefined,
-        );
+      if (userId && credits > 0) {
+        await addCredits(userId, credits);
       }
-      break;
     }
-
-    case "customer.subscription.deleted": {
-      const sub = event.data.object as Stripe.Subscription;
-      const customerId =
-        typeof sub.customer === "string" ? sub.customer : null;
-      const userId = await resolveUserId(
-        customerId,
-        sub.metadata?.supabase_user_id,
-      );
-      if (userId) {
-        await setPlan(userId, "free", "canceled", customerId ?? undefined);
-      }
-      break;
-    }
-
-    default:
-      // Unhandled event types are acknowledged with 200.
-      break;
   }
 
   return NextResponse.json({ received: true });

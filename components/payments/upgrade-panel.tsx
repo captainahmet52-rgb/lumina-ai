@@ -7,33 +7,39 @@ import {
   ShieldCheck,
   Check,
   Loader2,
-  CreditCard,
-  CheckCircle2,
+  Sparkles,
+  Video,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import {
-  PRO_FEATURES,
-  PRO_PRICE_LABEL,
-} from "@/lib/constants";
+import { Badge } from "@/components/ui/badge";
+import { CREDIT_PACKAGES, type CreditPackage } from "@/lib/constants";
 
 interface UpgradePanelProps {
-  isPro: boolean;
+  credits: number;
   status?: "success" | "cancelled";
 }
 
-export function UpgradePanel({ isPro, status }: UpgradePanelProps) {
+function formatTry(value: number) {
+  return `${value.toLocaleString("tr-TR")} TL`;
+}
+
+export function UpgradePanel({ credits, status }: UpgradePanelProps) {
+  const [selected, setSelected] = useState<CreditPackage>(
+    CREDIT_PACKAGES.find((p) => p.popular) ?? CREDIT_PACKAGES[0],
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function completePurchase() {
+  async function buy() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/checkout", { method: "POST" });
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ package_id: selected.id }),
+      });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Ödeme başlatılamadı.");
@@ -48,33 +54,11 @@ export function UpgradePanel({ isPro, status }: UpgradePanelProps) {
     }
   }
 
-  if (isPro) {
-    return (
-      <Card className="mx-auto max-w-lg">
-        <CardContent className="flex flex-col items-center gap-4 p-10 text-center">
-          <div className="flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">
-            <CheckCircle2 className="size-7" />
-          </div>
-          <div className="space-y-1">
-            <h2 className="text-xl font-bold">Creator Pro üyesisin</h2>
-            <p className="text-sm text-[var(--muted)]">
-              Sınırsız üretim, ticari kullanım hakkı ve 4K indirme senin için
-              açık. Lumina AI'ı desteklediğin için teşekkürler.
-            </p>
-          </div>
-          <Button asChild>
-            <Link href="/dashboard">Stüdyoya Dön</Link>
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {status === "success" && (
         <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-600">
-          Ödeme alındı! Planın birkaç saniye içinde Pro'ya geçecek.
+          Ödeme alındı! Kredilerin birkaç saniye içinde hesabına eklenecek.
         </div>
       )}
       {status === "cancelled" && (
@@ -83,132 +67,127 @@ export function UpgradePanel({ isPro, status }: UpgradePanelProps) {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-        {/* Payment Method (design — real charge via Stripe Checkout) */}
-        <Card>
-          <CardContent className="space-y-5 p-6">
-            <div className="flex items-center gap-2">
-              <CreditCard className="size-5 text-[var(--primary)]" />
-              <h2 className="text-base font-semibold">Ödeme Yöntemi</h2>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="cardholder">Kart Üzerindeki İsim</Label>
-                <Input id="cardholder" placeholder="Ad Soyad" autoComplete="cc-name" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="cardnumber">Kart Numarası</Label>
-                <Input
-                  id="cardnumber"
-                  placeholder="4242 4242 4242 4242"
-                  inputMode="numeric"
-                  autoComplete="cc-number"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="expiry">Son Kullanma</Label>
-                  <Input id="expiry" placeholder="AA / YY" autoComplete="cc-exp" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="cvv">CVV</Label>
-                  <Input id="cvv" placeholder="123" inputMode="numeric" autoComplete="cc-csc" />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-2 rounded-xl bg-[var(--bg)] p-3 text-xs text-[var(--muted)]">
-              <Lock className="mt-0.5 size-4 shrink-0 text-[var(--primary)]" />
-              <span>
-                Güvenliğin için kart bilgilerin doğrudan Stripe'ın PCI uyumlu
-                ödeme sayfasında işlenir — bizim sunucularımıza hiç uğramaz.
-                “Ödemeyi Tamamla”ya bastığında Stripe'a yönlendirilirsin.
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Order Summary */}
-        <Card className="h-fit">
-          <CardContent className="space-y-5 p-6">
-            <h2 className="text-base font-semibold">Sipariş Özeti</h2>
-
-            <div className="rounded-2xl border border-[var(--primary)]/20 bg-[var(--primary)]/5 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-[var(--text)]">Creator Pro</p>
-                  <p className="text-xs text-[var(--muted)]">Aylık faturalandırılır</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-[var(--text)]">
-                    {PRO_PRICE_LABEL}
-                  </p>
-                  <p className="text-xs text-[var(--muted)]">/ ay</p>
-                </div>
-              </div>
-            </div>
-
-            <ul className="space-y-2.5">
-              {PRO_FEATURES.map((feature) => (
-                <li key={feature} className="flex items-center gap-2.5 text-sm">
-                  <span className="flex size-5 items-center justify-center rounded-full bg-emerald-500/12 text-emerald-600">
-                    <Check className="size-3" />
-                  </span>
-                  {feature}
-                </li>
-              ))}
-            </ul>
-
-            <Separator />
-
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-[var(--muted)]">
-                <span>Ara Toplam</span>
-                <span>{PRO_PRICE_LABEL}</span>
-              </div>
-              <div className="flex justify-between text-[var(--muted)]">
-                <span>Vergi (%0)</span>
-                <span>$0.00</span>
-              </div>
-              <div className="flex justify-between pt-1 text-base font-bold text-[var(--text)]">
-                <span>Toplam</span>
-                <span>{PRO_PRICE_LABEL}</span>
-              </div>
-            </div>
-
-            {error && <p className="text-sm text-red-600">{error}</p>}
-
-            <Button
-              size="lg"
-              className="w-full"
-              onClick={completePurchase}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" /> Yönlendiriliyor…
-                </>
-              ) : (
-                "Ödemeyi Tamamla"
-              )}
-            </Button>
-
-            <Button asChild variant="ghost" size="sm" className="w-full">
-              <Link href="/dashboard">Planlara Dön</Link>
-            </Button>
-
-            <div className="flex items-center justify-center gap-4 pt-1 text-[11px] text-[var(--muted)]">
-              <span className="flex items-center gap-1">
-                <ShieldCheck className="size-3.5" /> PCI Uyumlu
-              </span>
-              <span className="flex items-center gap-1">
-                <Lock className="size-3.5" /> 256-bit SSL
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Mevcut kredi durumu */}
+      <div className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--card)] px-5 py-4">
+        <div className="flex size-11 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
+          <Video className="size-5" />
+        </div>
+        <div>
+          <p className="text-sm text-[var(--muted)]">Mevcut kredin</p>
+          <p className="text-lg font-bold text-[var(--text)]">
+            {credits} video kredisi
+          </p>
+        </div>
       </div>
+
+      {/* Paketler */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {CREDIT_PACKAGES.map((pkg) => {
+          const active = selected.id === pkg.id;
+          return (
+            <button
+              key={pkg.id}
+              type="button"
+              onClick={() => setSelected(pkg)}
+              className={
+                active
+                  ? "relative flex flex-col rounded-2xl border-2 border-[var(--primary)] bg-[var(--primary)]/5 p-5 text-left transition-colors"
+                  : "relative flex flex-col rounded-2xl border-2 border-[var(--border)] bg-[var(--card)] p-5 text-left transition-colors hover:border-[var(--primary)]/40"
+              }
+            >
+              {pkg.popular && (
+                <Badge
+                  variant="default"
+                  className="absolute -top-2.5 left-1/2 -translate-x-1/2"
+                >
+                  En Popüler
+                </Badge>
+              )}
+              <div className="flex items-center justify-between">
+                <p className="font-semibold text-[var(--text)]">{pkg.name}</p>
+                <span
+                  className={
+                    active
+                      ? "flex size-5 items-center justify-center rounded-full bg-[var(--primary)] text-white"
+                      : "size-5 rounded-full border border-[var(--border)]"
+                  }
+                >
+                  {active && <Check className="size-3" />}
+                </span>
+              </div>
+
+              <p className="mt-3 text-2xl font-bold text-[var(--text)]">
+                {formatTry(pkg.priceTry)}
+              </p>
+              <p className="text-xs text-[var(--muted)]">
+                {pkg.credits} video · video başı {formatTry(pkg.perVideo)}
+              </p>
+
+              {pkg.badge && (
+                <span className="mt-3 inline-flex w-fit items-center gap-1 rounded-full bg-emerald-500/12 px-2 py-0.5 text-[11px] font-semibold text-emerald-600">
+                  <Sparkles className="size-3" /> {pkg.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Özet + satın al */}
+      <Card>
+        <CardContent className="space-y-4 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-[var(--text)]">
+                {selected.name} paketi
+              </p>
+              <p className="text-sm text-[var(--muted)]">
+                {selected.credits} video kredisi hesabına eklenir
+              </p>
+            </div>
+            <p className="text-2xl font-bold text-[var(--text)]">
+              {formatTry(selected.priceTry)}
+            </p>
+          </div>
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
+          <Button
+            size="xl"
+            className="w-full"
+            onClick={buy}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="size-5 animate-spin" /> Yönlendiriliyor…
+              </>
+            ) : (
+              <>
+                <Lock className="size-4" /> Güvenli Ödeme ile Satın Al
+              </>
+            )}
+          </Button>
+
+          <Button asChild variant="ghost" size="sm" className="w-full">
+            <Link href="/dashboard">Panele Dön</Link>
+          </Button>
+
+          <div className="flex items-center justify-center gap-4 pt-1 text-[11px] text-[var(--muted)]">
+            <span className="flex items-center gap-1">
+              <ShieldCheck className="size-3.5" /> Güvenli Ödeme
+            </span>
+            <span className="flex items-center gap-1">
+              <Lock className="size-3.5" /> 256-bit SSL
+            </span>
+          </div>
+
+          <p className="text-center text-[11px] text-[var(--muted)]">
+            Ödeme, Stripe&apos;ın PCI uyumlu güvenli sayfasında alınır. Kart
+            bilgilerin bizim sunucularımıza hiç uğramaz.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

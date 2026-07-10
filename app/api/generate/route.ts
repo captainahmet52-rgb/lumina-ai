@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
   const credits = profile?.credits ?? 0;
 
   if (plan !== "pro" && credits <= 0) {
-    return NextResponse.json({ error: "Krediniz bitti. Pro plana geçin." }, { status: 402 });
+    return NextResponse.json({ error: "Krediniz bitti. Kredi yükleyin." }, { status: 402 });
   }
 
   // DB'ye kayıt — prompt alanına video_prompt yazıyoruz (gösterim için)

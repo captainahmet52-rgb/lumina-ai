@@ -61,7 +61,7 @@ export function CreateContent({ userId, plan, credits }: CreateContentProps) {
 
       if (res.status === 402) {
         setUpgradeNeeded(true);
-        setError(data.error || "Krediniz bitti. Pro plana geçin.");
+        setError(data.error || "Krediniz bitti. Kredi yükleyin.");
         return;
       }
       if (!res.ok) {
@@ -89,12 +89,12 @@ export function CreateContent({ userId, plan, credits }: CreateContentProps) {
               <div>
                 <p className="text-sm font-semibold">Krediniz bitti</p>
                 <p className="text-sm text-[var(--muted)]">
-                  Sınırsız video için Pro plana geçin.
+                  Video üretmeye devam etmek için kredi yükleyin.
                 </p>
               </div>
             </div>
             <Button asChild>
-              <Link href="/payments">Pro&apos;ya Geç</Link>
+              <Link href="/payments">Kredi Al</Link>
             </Button>
           </CardContent>
         </Card>
@@ -208,7 +208,7 @@ export function CreateContent({ userId, plan, credits }: CreateContentProps) {
               {error}{" "}
               {upgradeNeeded && (
                 <Link href="/payments" className="font-semibold underline">
-                  Şimdi geç
+                  Kredi al
                 </Link>
               )}
             </p>

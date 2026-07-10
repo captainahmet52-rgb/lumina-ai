@@ -4,7 +4,7 @@ import { getSessionProfile } from "@/lib/data/profile";
 import { Topbar } from "@/components/app/topbar";
 import { UpgradePanel } from "@/components/payments/upgrade-panel";
 
-export const metadata: Metadata = { title: "Creator Pro'ya Geç" };
+export const metadata: Metadata = { title: "Kredi Satın Al" };
 
 export default async function PaymentsPage({
   searchParams,
@@ -27,14 +27,14 @@ export default async function PaymentsPage({
       <div className="mx-auto w-full max-w-5xl space-y-7 px-4 py-7 sm:px-8">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            Creator Pro aboneliğini tamamla
+            Video Kredisi Satın Al
           </h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Sınırsız üretim, ticari kullanım hakkı ve 4K indirmenin kilidini aç.
+            1 kredi = 1 video. Sana uygun paketi seç, kredin bittiğinde yükle.
           </p>
         </div>
 
-        <UpgradePanel isPro={session.profile.plan === "pro"} status={normalizedStatus} />
+        <UpgradePanel credits={session.profile.credits} status={normalizedStatus} />
       </div>
     </>
   );
